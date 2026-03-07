@@ -56,17 +56,17 @@ const Index = () => {
             <ShaderCarousel activeEffect={activeEffect} />
           </div>
 
-          {/* Active effect info + keyboard hint */}
-          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-            <div className="rounded-xl bg-secondary p-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Active Effect</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{active.label}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{active.description}</p>
+          {/* Active effect + keyboard hint — inline bar */}
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-secondary/50 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm font-medium text-foreground">{active.label}</span>
+              <span className="hidden text-xs text-muted-foreground sm:inline">— {active.description}</span>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-secondary p-4 text-xs text-muted-foreground">
+            <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
               <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1.5 font-mono text-[10px]">←</kbd>
               <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1.5 font-mono text-[10px]">→</kbd>
-              <span>Navigate slides</span>
+              <span className="hidden sm:inline">Navigate</span>
             </div>
           </div>
         </main>
