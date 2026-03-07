@@ -36,6 +36,9 @@
 
     --radius: 0.75rem;
 
+    --panel: transparent;
+    --panel-border: 214.3 31.8% 91.4%;
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -95,6 +98,10 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --panel: #08132B;
+    /* Match panel so border is invisible in dark mode (hsl() can't use "transparent") */
+    --panel-border: 222 58% 11%;
   }
 }
 

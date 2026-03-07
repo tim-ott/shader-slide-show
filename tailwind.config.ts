@@ -19,6 +19,8 @@ export default {
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       colors: {
+        panel: "var(--panel)",
+        "panel-border": "hsl(var(--panel-border))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, CloudFog, Orbit, Code, Sliders, Download, Sparkles, type LucideIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, CloudFog, Orbit, Code, Sliders, Download, Sparkles, SunMedium, MoonStar, type LucideIcon } from "lucide-react";
 import ShaderCarousel from "@/components/ShaderCarousel";
 import ShaderControls from "@/components/ShaderControls";
 import CodeEditor from "@/components/CodeEditor";
@@ -21,6 +22,7 @@ const effectIcons: Record<string, LucideIcon> = {
 type SidebarTab = "controls" | "code" | "export";
 
 const Index = () => {
+  const { theme, setTheme } = useTheme();
   const [activeEffect, setActiveEffect] = useState(shaderEffects[0].id);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("controls");
   const [duration, setDuration] = useState(1200);
@@ -96,9 +98,23 @@ const Index = () => {
             v1.0
           </span>
         </div>
-        <p className="hidden text-xs text-muted-foreground md:block">
-          Interactive GLSL Transition Explorer
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="hidden text-xs text-muted-foreground md:block">
+            Interactive GLSL Transition Explorer
+          </p>
+          <button
+            type="button"
+            aria-label="Toggle theme"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted/60 text-muted-foreground shadow-sm transition hover:bg-muted hover:text-foreground"
+          >
+            {theme === "dark" ? (
+              <SunMedium className="h-4 w-4" />
+            ) : (
+              <MoonStar className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </nav>
 
       {/* Main */}
@@ -181,7 +197,7 @@ const Index = () => {
 
         {/* Canvas area - full width, sidebar floats over */}
         <main className="flex min-w-0 flex-1 flex-col justify-center gap-4 overflow-hidden px-6 py-0">
-          <div className="relative h-full w-full overflow-hidden rounded-2xl border border-border shadow-2xl shadow-primary/5">
+          <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-2xl shadow-primary/5">
             <ShaderCarousel
               activeEffect={activeEffect}
               customUniforms={uniformValues}
@@ -193,7 +209,7 @@ const Index = () => {
           {/* Footer bar */}
           <div className="flex items-center gap-3">
             {/* Active effect */}
-            <div className="flex flex-1 items-center gap-3 rounded-lg bg-[rgba(11,18,34,1)] px-4 py-3">
+            <div className="flex flex-1 items-center gap-3 rounded-lg border border-panel-border bg-panel px-4 py-3">
               {(() => { const Icon = effectIcons[active.id] || Waves; return (
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15">
                   <Icon size={16} className="text-primary" />
@@ -206,7 +222,7 @@ const Index = () => {
             </div>
 
             {/* Keyboard hint */}
-            <div className="flex h-full items-center gap-2.5 rounded-lg bg-[rgba(11,18,34,1)] px-4 py-3">
+            <div className="flex h-full items-center gap-2.5 rounded-lg border border-panel-border bg-panel px-4 py-3">
               <div className="flex gap-1">
                 <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-muted font-mono text-[10px] text-muted-foreground">←</kbd>
                 <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-muted font-mono text-[10px] text-muted-foreground">→</kbd>

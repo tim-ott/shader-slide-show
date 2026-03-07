@@ -21,7 +21,7 @@ export default function ShaderControls({
   return (
     <div className="space-y-5">
       {/* Duration */}
-      <div className="rounded-lg bg-[rgba(11,18,34,1)] p-3.5">
+      <div className="rounded-lg border border-panel-border bg-panel p-3.5">
         <div className="mb-2.5 flex items-center justify-between">
           <label className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">Duration</label>
           <span className="rounded-md bg-background px-2 py-0.5 font-mono text-[11px] text-foreground">{duration}ms</span>
@@ -41,7 +41,7 @@ export default function ShaderControls({
         <div className="space-y-3">
           <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">Parameters</p>
           {params.map((p) => (
-            <div key={p.key} className="rounded-lg bg-[rgba(11,18,34,1)] p-3.5">
+            <div key={p.key} className="rounded-lg border border-panel-border bg-panel p-3.5">
               <div className="mb-2.5 flex items-center justify-between">
                 <label className="text-xs font-medium text-secondary-foreground">{p.label}</label>
                 <span className="rounded-md bg-background px-2 py-0.5 font-mono text-[11px] text-foreground">
