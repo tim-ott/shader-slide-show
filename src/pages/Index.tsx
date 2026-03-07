@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, type LucideIcon } from "lucide-react";
+import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, CloudFog, Orbit, type LucideIcon } from "lucide-react";
 import ShaderCarousel from "@/components/ShaderCarousel";
 import { shaderEffects } from "@/shaders/index";
 
@@ -11,6 +11,8 @@ const effectIcons: Record<string, LucideIcon> = {
   "glitch": Zap,
   "liquid-morph": Droplets,
   "burn-dissolve": Flame,
+  "smoke": CloudFog,
+  "liquid-portal": Orbit,
 };
 
 const Index = () => {
