@@ -16,9 +16,10 @@ interface TransitionPlaneProps {
   progress: number;
   direction: number;
   fragmentShader: string;
+  customUniforms: Record<string, number>;
 }
 
-function TransitionPlane({ textures, currentIndex, nextIndex, progress, direction, fragmentShader }: TransitionPlaneProps) {
+function TransitionPlane({ textures, currentIndex, nextIndex, progress, direction, fragmentShader, customUniforms }: TransitionPlaneProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const { viewport } = useThree();
 
@@ -28,6 +29,9 @@ function TransitionPlane({ textures, currentIndex, nextIndex, progress, directio
       uTexNext: { value: textures[1] },
       uProgress: { value: 0 },
       uDirection: { value: 1 },
+      uIntensity: { value: 1.0 },
+      uScale: { value: 1.0 },
+      uSpeed: { value: 1.0 },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -35,10 +39,14 @@ function TransitionPlane({ textures, currentIndex, nextIndex, progress, directio
 
   useFrame(() => {
     if (!materialRef.current) return;
-    materialRef.current.uniforms.uTexCurrent.value = textures[currentIndex];
-    materialRef.current.uniforms.uTexNext.value = textures[nextIndex];
-    materialRef.current.uniforms.uProgress.value = progress;
-    materialRef.current.uniforms.uDirection.value = direction;
+    const u = materialRef.current.uniforms;
+    u.uTexCurrent.value = textures[currentIndex];
+    u.uTexNext.value = textures[nextIndex];
+    u.uProgress.value = progress;
+    u.uDirection.value = direction;
+    if (u.uIntensity) u.uIntensity.value = customUniforms.uIntensity ?? 1;
+    if (u.uScale) u.uScale.value = customUniforms.uScale ?? 1;
+    if (u.uSpeed) u.uSpeed.value = customUniforms.uSpeed ?? 1;
   });
 
   return (
@@ -49,6 +57,7 @@ function TransitionPlane({ textures, currentIndex, nextIndex, progress, directio
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={uniforms}
+        key={fragmentShader}
       />
     </mesh>
   );
@@ -56,9 +65,12 @@ function TransitionPlane({ textures, currentIndex, nextIndex, progress, directio
 
 interface ShaderCanvasProps {
   activeEffect: string;
+  customUniforms?: Record<string, number>;
+  overrideShader?: string | null;
+  duration?: number;
 }
 
-export default function ShaderCarousel({ activeEffect }: ShaderCanvasProps) {
+export default function ShaderCarousel({ activeEffect, customUniforms = {}, overrideShader, duration = 1200 }: ShaderCanvasProps) {
   const [textures, setTextures] = useState<THREE.Texture[]>([]);
   const [current, setCurrent] = useState(0);
   const [next, setNext] = useState(0);
@@ -67,8 +79,11 @@ export default function ShaderCarousel({ activeEffect }: ShaderCanvasProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const animRef = useRef<number>(0);
   const autoRef = useRef<ReturnType<typeof setTimeout>>();
+  const durationRef = useRef(duration);
+  durationRef.current = duration;
 
   const effect = shaderEffects.find((e) => e.id === activeEffect) || shaderEffects[0];
+  const fragmentShader = overrideShader || effect.fragmentShader;
 
   useEffect(() => {
     const loader = new THREE.TextureLoader();
@@ -82,10 +97,9 @@ export default function ShaderCarousel({ activeEffect }: ShaderCanvasProps) {
       setNext(idx);
       setDirection(dir);
       const start = performance.now();
-      const duration = 1200;
       const animate = (now: number) => {
         const elapsed = now - start;
-        const p = Math.min(elapsed / duration, 1);
+        const p = Math.min(elapsed / durationRef.current, 1);
         setProgress(p);
         if (p < 1) {
           animRef.current = requestAnimationFrame(animate);
@@ -117,6 +131,7 @@ export default function ShaderCarousel({ activeEffect }: ShaderCanvasProps) {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
     };
@@ -147,14 +162,13 @@ export default function ShaderCarousel({ activeEffect }: ShaderCanvasProps) {
           nextIndex={next}
           progress={progress}
           direction={direction}
-          fragmentShader={effect.fragmentShader}
+          fragmentShader={fragmentShader}
+          customUniforms={customUniforms}
         />
       </Canvas>
 
-      {/* Bottom gradient */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent" />
 
-      {/* Nav dots */}
       <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
         {slideSources.map((_, i) => (
           <button
@@ -169,7 +183,6 @@ export default function ShaderCarousel({ activeEffect }: ShaderCanvasProps) {
         ))}
       </div>
 
-      {/* Arrows */}
       <button
         onClick={goPrev}
         className="absolute left-3 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-md transition hover:bg-white/20 hover:text-white"
