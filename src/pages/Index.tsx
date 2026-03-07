@@ -51,7 +51,7 @@ const Index = () => {
         </aside>
 
         {/* Canvas + info */}
-        <main className="flex flex-1 flex-col gap-4 p-4 md:p-8">
+        <main className="flex flex-1 flex-col justify-center gap-4 p-4 md:p-8">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border shadow-lg">
             <ShaderCarousel activeEffect={activeEffect} />
           </div>
