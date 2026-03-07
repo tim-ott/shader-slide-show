@@ -1,0 +1,20 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background to echo the navbar logo tile -->
+  <rect x="8" y="8" width="48" height="48" rx="12" fill="#E5F0FF" />
+
+  <!-- Sparkles-style mark inspired by the navbar icon -->
+  <path
+    d="M32 18L33.8 24.2L40 26L33.8 27.8L32 34L30.2 27.8L24 26L30.2 24.2L32 18Z"
+    fill="#020617"
+  />
+  <path
+    d="M22 34L22.9 37.1L26 38L22.9 38.9L22 42L21.1 38.9L18 38L21.1 37.1L22 34Z"
+    fill="#020617"
+    opacity="0.75"
+  />
+  <path
+    d="M42 34L42.8 36.8L45.6 37.6L42.8 38.4L42 41.2L41.2 38.4L38.4 37.6L41.2 36.8L42 34Z"
+    fill="#020617"
+    opacity="0.75"
+  />
+</svg>
