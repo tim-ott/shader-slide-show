@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, CloudFog, Orbit, Code, Sliders, Download, type LucideIcon } from "lucide-react";
+import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, CloudFog, Orbit, Code, Sliders, Download, Sparkles, type LucideIcon } from "lucide-react";
 import ShaderCarousel from "@/components/ShaderCarousel";
 import ShaderControls from "@/components/ShaderControls";
 import CodeEditor from "@/components/CodeEditor";
@@ -32,7 +32,6 @@ const Index = () => {
   const currentParams = paramValues[activeEffect] || {};
   const currentCode = customCode[activeEffect] ?? null;
 
-  // Build uniform values from params
   const uniformValues = useMemo(() => {
     const vals: Record<string, number> = {};
     active.params.forEach((p) => {
@@ -83,43 +82,48 @@ const Index = () => {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col overflow-hidden bg-background">
       {/* Nav */}
-      <nav className="flex items-center justify-between border-b border-border px-6 py-3 md:px-10">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-foreground" />
-          <span className="text-base font-semibold tracking-tight text-foreground">
+      <nav className="flex h-12 shrink-0 items-center justify-between border-b border-border px-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
+            <Sparkles size={13} className="text-primary-foreground" />
+          </div>
+          <span className="text-sm font-semibold tracking-tight text-foreground">
             Shader Playground
           </span>
+          <span className="hidden rounded-full bg-surface px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline">
+            v1.0
+          </span>
         </div>
-        <p className="hidden text-sm text-muted-foreground md:block">
+        <p className="hidden text-xs text-muted-foreground md:block">
           Interactive GLSL Transition Explorer
         </p>
       </nav>
 
       {/* Main */}
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="flex w-full shrink-0 flex-col border-b border-border md:w-80 md:border-b-0 md:border-r">
+        <aside className="flex w-80 shrink-0 flex-col overflow-hidden border-r border-border bg-card">
           {/* Effect selector */}
           <div className="border-b border-border p-4">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Effects</p>
-            <div className="flex flex-wrap gap-1.5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Effects</p>
+            <div className="grid grid-cols-2 gap-1.5">
               {shaderEffects.map((effect) => {
                 const Icon = effectIcons[effect.id] || Waves;
+                const isActive = activeEffect === effect.id;
                 return (
                   <button
                     key={effect.id}
                     onClick={() => handleEffectChange(effect.id)}
-                    title={effect.label}
-                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all duration-200 ${
-                      activeEffect === effect.id
-                        ? "bg-foreground text-background shadow-sm"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                    className={`group flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[11px] font-medium transition-all duration-150 ${
+                      isActive
+                        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+                        : "text-muted-foreground hover:bg-surface hover:text-foreground"
                     }`}
                   >
-                    <Icon size={12} />
-                    <span className="hidden sm:inline md:inline">{effect.label}</span>
+                    <Icon size={13} className={isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} />
+                    <span className="truncate">{effect.label}</span>
                   </button>
                 );
               })}
@@ -132,13 +136,13 @@ const Index = () => {
               <button
                 key={tab.id}
                 onClick={() => setSidebarTab(tab.id)}
-                className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+                className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-medium transition-colors ${
                   sidebarTab === tab.id
-                    ? "border-b-2 border-foreground text-foreground"
+                    ? "border-b-2 border-primary text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <tab.icon size={13} />
+                <tab.icon size={12} />
                 {tab.label}
               </button>
             ))}
@@ -175,9 +179,9 @@ const Index = () => {
           </div>
         </aside>
 
-        {/* Canvas + info */}
-        <main className="flex flex-1 flex-col justify-center gap-4 p-4 md:p-8">
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border shadow-lg">
+        {/* Canvas area */}
+        <main className="flex flex-1 flex-col justify-center gap-4 overflow-hidden p-6">
+          <div className="relative w-full overflow-hidden rounded-xl border border-border shadow-2xl shadow-primary/5" style={{ aspectRatio: "16/9" }}>
             <ShaderCarousel
               activeEffect={activeEffect}
               customUniforms={uniformValues}
@@ -186,25 +190,28 @@ const Index = () => {
             />
           </div>
 
-          {/* Footer */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            <div className="flex flex-1 items-center gap-4 rounded-xl border border-border bg-secondary/40 px-5 py-4">
+          {/* Footer bar */}
+          <div className="flex items-center gap-3">
+            {/* Active effect */}
+            <div className="flex flex-1 items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
               {(() => { const Icon = effectIcons[active.id] || Waves; return (
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
-                  <Icon size={18} />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15">
+                  <Icon size={16} className="text-primary" />
                 </div>
               ); })()}
-              <div>
-                <p className="text-sm font-semibold text-foreground">{active.label}</p>
-                <p className="text-xs text-muted-foreground">{active.description}</p>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground">{active.label}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{active.description}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 px-5 py-4">
-              <div className="flex gap-1.5">
-                <kbd className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background font-mono text-xs text-muted-foreground shadow-sm">←</kbd>
-                <kbd className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background font-mono text-xs text-muted-foreground shadow-sm">→</kbd>
+
+            {/* Keyboard hint */}
+            <div className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-4 py-3">
+              <div className="flex gap-1">
+                <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-surface font-mono text-[10px] text-muted-foreground">←</kbd>
+                <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-surface font-mono text-[10px] text-muted-foreground">→</kbd>
               </div>
-              <span className="text-xs text-muted-foreground">Navigate<br />slides</span>
+              <span className="text-[11px] text-muted-foreground">Navigate</span>
             </div>
           </div>
         </main>
