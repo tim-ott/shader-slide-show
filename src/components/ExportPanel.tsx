@@ -68,13 +68,13 @@ export default function ShaderTransition({ texCurrent, texNext, progress, direct
         <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">React Component</span>
         <button
           onClick={handleCopy}
-          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[11px] text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
+          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           {copied ? <Check size={11} /> : <Copy size={11} />}
           <span>{copied ? "Copied!" : "Copy Component"}</span>
         </button>
       </div>
-      <pre className="max-h-[400px] overflow-auto rounded-lg border border-border bg-surface p-4 font-mono text-[10px] leading-relaxed text-foreground/70">
+      <pre className="max-h-[400px] overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-[10px] leading-relaxed text-foreground/70">
         {componentCode}
       </pre>
     </div>

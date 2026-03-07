@@ -24,14 +24,14 @@ export default function CodeEditor({ code, onChange, onReset, error }: CodeEdito
         <div className="flex gap-1.5">
           <button
             onClick={onReset}
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[11px] text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="Reset to original"
           >
             <RotateCcw size={11} />
           </button>
           <button
             onClick={handleCopy}
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[11px] text-muted-foreground transition-colors hover:border-muted-foreground/30 hover:text-foreground"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copied ? <Check size={11} /> : <Copy size={11} />}
             <span>{copied ? "Copied" : "Copy"}</span>
@@ -42,7 +42,7 @@ export default function CodeEditor({ code, onChange, onReset, error }: CodeEdito
         value={code}
         onChange={(e) => onChange(e.target.value)}
         spellCheck={false}
-        className="h-72 w-full resize-y rounded-lg border border-border bg-surface p-4 font-mono text-[11px] leading-relaxed text-foreground/80 placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+        className="h-72 w-full resize-y rounded-lg border border-border bg-background p-4 font-mono text-[11px] leading-relaxed text-foreground/80 placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
       />
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-[11px] text-destructive">

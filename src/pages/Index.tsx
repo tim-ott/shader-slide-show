@@ -84,7 +84,7 @@ const Index = () => {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       {/* Nav */}
-      <nav className="flex h-12 shrink-0 items-center justify-between border-b border-border px-5">
+      <nav className="flex h-16 shrink-0 items-center justify-between px-9">
         <div className="flex items-center gap-2.5">
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
             <Sparkles size={13} className="text-primary-foreground" />
@@ -92,7 +92,7 @@ const Index = () => {
           <span className="text-sm font-semibold tracking-tight text-foreground">
             Shader Playground
           </span>
-          <span className="hidden rounded-full bg-surface px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline">
+          <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline">
             v1.0
           </span>
         </div>
@@ -102,9 +102,9 @@ const Index = () => {
       </nav>
 
       {/* Main */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="flex w-80 shrink-0 flex-col overflow-hidden border-r border-border bg-card">
+      <div className="relative flex flex-1 overflow-hidden pb-6">
+        {/* Floating sidebar */}
+        <aside className="static z-20 ml-6 flex h-full w-80 flex-col overflow-hidden rounded-xl border border-border bg-card/95 shadow-xl backdrop-blur-sm">
           {/* Effect selector */}
           <div className="border-b border-border p-4">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Effects</p>
@@ -118,8 +118,8 @@ const Index = () => {
                     onClick={() => handleEffectChange(effect.id)}
                     className={`group flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[11px] font-medium transition-all duration-150 ${
                       isActive
-                        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
-                        : "text-muted-foreground hover:bg-surface hover:text-foreground"
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     <Icon size={13} className={isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} />
@@ -179,9 +179,9 @@ const Index = () => {
           </div>
         </aside>
 
-        {/* Canvas area */}
-        <main className="flex flex-1 flex-col justify-center gap-4 overflow-hidden p-6">
-          <div className="relative w-full overflow-hidden rounded-xl border border-border shadow-2xl shadow-primary/5" style={{ aspectRatio: "16/9" }}>
+        {/* Canvas area - full width, sidebar floats over */}
+        <main className="flex min-w-0 flex-1 flex-col justify-center gap-4 overflow-hidden px-6 py-0">
+          <div className="relative h-full w-full overflow-hidden rounded-2xl border border-border shadow-2xl shadow-primary/5">
             <ShaderCarousel
               activeEffect={activeEffect}
               customUniforms={uniformValues}
@@ -193,7 +193,7 @@ const Index = () => {
           {/* Footer bar */}
           <div className="flex items-center gap-3">
             {/* Active effect */}
-            <div className="flex flex-1 items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+            <div className="flex flex-1 items-center gap-3 rounded-lg bg-[rgba(11,18,34,1)] px-4 py-3">
               {(() => { const Icon = effectIcons[active.id] || Waves; return (
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15">
                   <Icon size={16} className="text-primary" />
@@ -206,10 +206,10 @@ const Index = () => {
             </div>
 
             {/* Keyboard hint */}
-            <div className="flex items-center gap-2.5 rounded-lg border border-border bg-card px-4 py-3">
+            <div className="flex h-full items-center gap-2.5 rounded-lg bg-[rgba(11,18,34,1)] px-4 py-3">
               <div className="flex gap-1">
-                <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-surface font-mono text-[10px] text-muted-foreground">←</kbd>
-                <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-surface font-mono text-[10px] text-muted-foreground">→</kbd>
+                <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-muted font-mono text-[10px] text-muted-foreground">←</kbd>
+                <kbd className="inline-flex h-6 w-6 items-center justify-center rounded border border-border bg-muted font-mono text-[10px] text-muted-foreground">→</kbd>
               </div>
               <span className="text-[11px] text-muted-foreground">Navigate</span>
             </div>
