@@ -1,6 +1,17 @@
 import { useState } from "react";
+import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, type LucideIcon } from "lucide-react";
 import ShaderCarousel from "@/components/ShaderCarousel";
 import { shaderEffects } from "@/shaders/index";
+
+const effectIcons: Record<string, LucideIcon> = {
+  "noise-distort": Waves,
+  "pixelation": Grid3X3,
+  "zoom-blur": ZoomIn,
+  "curtain-wipe": Columns3,
+  "glitch": Zap,
+  "liquid-morph": Droplets,
+  "burn-dissolve": Flame,
+};
 
 const Index = () => {
   const [activeEffect, setActiveEffect] = useState(shaderEffects[0].id);
@@ -60,9 +71,11 @@ const Index = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
             {/* Active effect card */}
             <div className="flex flex-1 items-center gap-4 rounded-xl border border-border bg-secondary/40 px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background text-xs font-bold uppercase">
-                {active.label.slice(0, 2)}
-              </div>
+              {(() => { const Icon = effectIcons[active.id] || Waves; return (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+                  <Icon size={18} />
+                </div>
+              ); })()}
               <div>
                 <p className="text-sm font-semibold text-foreground">{active.label}</p>
                 <p className="text-xs text-muted-foreground">{active.description}</p>
