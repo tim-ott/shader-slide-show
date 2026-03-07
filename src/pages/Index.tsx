@@ -51,22 +51,31 @@ const Index = () => {
         </aside>
 
         {/* Canvas + info */}
-        <main className="flex flex-1 flex-col p-4 md:p-8">
+        <main className="flex flex-1 flex-col gap-4 p-4 md:p-8">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border shadow-lg">
             <ShaderCarousel activeEffect={activeEffect} />
           </div>
 
-          {/* Active effect + keyboard hint — inline bar */}
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-secondary/50 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm font-medium text-foreground">{active.label}</span>
-              <span className="hidden text-xs text-muted-foreground sm:inline">— {active.description}</span>
+          {/* Footer: effect info left, nav hint right */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            {/* Active effect card */}
+            <div className="flex flex-1 items-center gap-4 rounded-xl border border-border bg-secondary/40 px-5 py-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background text-xs font-bold uppercase">
+                {active.label.slice(0, 2)}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{active.label}</p>
+                <p className="text-xs text-muted-foreground">{active.description}</p>
+              </div>
             </div>
-            <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-              <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1.5 font-mono text-[10px]">←</kbd>
-              <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1.5 font-mono text-[10px]">→</kbd>
-              <span className="hidden sm:inline">Navigate</span>
+
+            {/* Keyboard hint card */}
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 px-5 py-4">
+              <div className="flex gap-1.5">
+                <kbd className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background font-mono text-xs text-muted-foreground shadow-sm">←</kbd>
+                <kbd className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background font-mono text-xs text-muted-foreground shadow-sm">→</kbd>
+              </div>
+              <span className="text-xs text-muted-foreground">Navigate<br />slides</span>
             </div>
           </div>
         </main>
