@@ -1,8 +1,18 @@
+export interface ShaderParam {
+  key: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+}
+
 export interface ShaderEffect {
   id: string;
   label: string;
   description: string;
   fragmentShader: string;
+  params: ShaderParam[];
 }
 
 const noiseLib = `
@@ -58,11 +68,15 @@ const fbmLib = `
     return val;
   }
 `;
-const uniformHeader = `
+
+export const uniformHeader = `
   uniform sampler2D uTexCurrent;
   uniform sampler2D uTexNext;
   uniform float uProgress;
   uniform float uDirection;
+  uniform float uIntensity;
+  uniform float uScale;
+  uniform float uSpeed;
   varying vec2 vUv;
 `;
 
@@ -74,18 +88,26 @@ export const vertexShader = `
   }
 `;
 
+export const noiseLibSource = noiseLib;
+export const fbmLibSource = fbmLib;
+
 export const shaderEffects: ShaderEffect[] = [
   {
     id: "noise-distort",
     label: "Noise Distort",
     description: "Organic noise-driven dissolve with wave displacement",
+    params: [
+      { key: "uIntensity", label: "Distortion", min: 0, max: 0.1, step: 0.002, defaultValue: 0.02 },
+      { key: "uScale", label: "Noise Scale", min: 1, max: 10, step: 0.5, defaultValue: 3 },
+      { key: "uSpeed", label: "Wave Freq", min: 2, max: 30, step: 1, defaultValue: 10 },
+    ],
     fragmentShader: `${uniformHeader}${noiseLib}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        float noise = snoise(vUv * 3.0 + uDirection * 0.5) * 0.5 + 0.5;
+        float noise = snoise(vUv * uScale + uDirection * 0.5) * 0.5 + 0.5;
         float distort = smoothstep(0.0, 1.0, t * 1.4 - noise * 0.4);
-        vec2 uvC = vUv + vec2(sin(vUv.y * 10.0) * 0.02 * t * uDirection, 0.0);
-        vec2 uvN = vUv - vec2(sin(vUv.y * 10.0) * 0.02 * (1.0 - t) * uDirection, 0.0);
+        vec2 uvC = vUv + vec2(sin(vUv.y * uSpeed) * uIntensity * t * uDirection, 0.0);
+        vec2 uvN = vUv - vec2(sin(vUv.y * uSpeed) * uIntensity * (1.0 - t) * uDirection, 0.0);
         gl_FragColor = mix(texture2D(uTexCurrent, uvC), texture2D(uTexNext, uvN), distort);
       }`,
   },
@@ -93,10 +115,13 @@ export const shaderEffects: ShaderEffect[] = [
     id: "pixelation",
     label: "Pixelation",
     description: "Mosaic blocks dissolve and reform into the next image",
+    params: [
+      { key: "uScale", label: "Max Pixels", min: 20, max: 200, step: 5, defaultValue: 80 },
+    ],
     fragmentShader: `${uniformHeader}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        float pixels = mix(1.0, 80.0, sin(t * 3.14159));
+        float pixels = mix(1.0, uScale, sin(t * 3.14159));
         vec2 pixUv = floor(vUv * pixels) / pixels;
         vec2 uv = mix(vUv, pixUv, sin(t * 3.14159));
         gl_FragColor = mix(texture2D(uTexCurrent, uv), texture2D(uTexNext, uv), t);
@@ -106,12 +131,15 @@ export const shaderEffects: ShaderEffect[] = [
     id: "zoom-blur",
     label: "Zoom Blur",
     description: "Radial blur rushing outward from center",
+    params: [
+      { key: "uIntensity", label: "Blur Strength", min: 0.02, max: 0.5, step: 0.02, defaultValue: 0.15 },
+    ],
     fragmentShader: `${uniformHeader}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
         vec2 center = vec2(0.5);
         vec2 dir = vUv - center;
-        float strength = t * (1.0 - t) * 0.15;
+        float strength = t * (1.0 - t) * uIntensity;
         vec4 colA = vec4(0.0);
         vec4 colB = vec4(0.0);
         const int samples = 12;
@@ -130,13 +158,17 @@ export const shaderEffects: ShaderEffect[] = [
     id: "curtain-wipe",
     label: "Curtain Wipe",
     description: "Vertical strips peel away like window blinds",
+    params: [
+      { key: "uScale", label: "Strip Count", min: 4, max: 30, step: 1, defaultValue: 12 },
+      { key: "uIntensity", label: "Stagger", min: 0.1, max: 0.8, step: 0.05, defaultValue: 0.4 },
+    ],
     fragmentShader: `${uniformHeader}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        float strips = 12.0;
+        float strips = uScale;
         float stripPos = fract(vUv.x * strips);
         float stripIndex = floor(vUv.x * strips);
-        float delay = stripIndex / strips * 0.4;
+        float delay = stripIndex / strips * uIntensity;
         float localT = clamp((t - delay) / (1.0 - delay * 0.8), 0.0, 1.0);
         float reveal = step(stripPos, localT);
         gl_FragColor = mix(texture2D(uTexCurrent, vUv), texture2D(uTexNext, vUv), reveal);
@@ -146,11 +178,16 @@ export const shaderEffects: ShaderEffect[] = [
     id: "glitch",
     label: "Glitch",
     description: "RGB split and scan-line distortion",
+    params: [
+      { key: "uIntensity", label: "RGB Split", min: 0.01, max: 0.2, step: 0.005, defaultValue: 0.06 },
+      { key: "uScale", label: "Noise Freq", min: 5, max: 50, step: 1, defaultValue: 20 },
+      { key: "uSpeed", label: "Scanlines", min: 200, max: 1500, step: 50, defaultValue: 800 },
+    ],
     fragmentShader: `${uniformHeader}${noiseLib}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        float intensity = sin(t * 3.14159) * 0.06;
-        float noise = snoise(vec2(vUv.y * 20.0, t * 10.0));
+        float intensity = sin(t * 3.14159) * uIntensity;
+        float noise = snoise(vec2(vUv.y * uScale, t * 10.0));
         float shift = noise * intensity;
         vec4 colC = vec4(
           texture2D(uTexCurrent, vUv + vec2(shift, 0.0)).r,
@@ -164,7 +201,7 @@ export const shaderEffects: ShaderEffect[] = [
           texture2D(uTexNext, vUv - vec2(shift, 0.0)).b,
           1.0
         );
-        float scanline = sin(vUv.y * 800.0) * 0.04 * sin(t * 3.14159);
+        float scanline = sin(vUv.y * uSpeed) * 0.04 * sin(t * 3.14159);
         gl_FragColor = mix(colC, colN, t) + scanline;
       }`,
   },
@@ -172,11 +209,15 @@ export const shaderEffects: ShaderEffect[] = [
     id: "liquid-morph",
     label: "Liquid Morph",
     description: "Fluid, water-like warping between images",
+    params: [
+      { key: "uIntensity", label: "Warp Amount", min: 0.02, max: 0.2, step: 0.01, defaultValue: 0.08 },
+      { key: "uScale", label: "Frequency", min: 2, max: 10, step: 0.5, defaultValue: 4 },
+    ],
     fragmentShader: `${uniformHeader}${noiseLib}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        float n1 = snoise(vUv * 4.0 + t * 2.0) * 0.08;
-        float n2 = snoise(vUv * 6.0 - t * 3.0) * 0.06;
+        float n1 = snoise(vUv * uScale + t * 2.0) * uIntensity;
+        float n2 = snoise(vUv * (uScale * 1.5) - t * 3.0) * (uIntensity * 0.75);
         vec2 warp = vec2(n1, n2) * sin(t * 3.14159);
         vec2 uvC = vUv + warp;
         vec2 uvN = vUv - warp * 0.5;
@@ -189,13 +230,17 @@ export const shaderEffects: ShaderEffect[] = [
     id: "burn-dissolve",
     label: "Burn Dissolve",
     description: "Edges burn away with a glowing ember line",
+    params: [
+      { key: "uScale", label: "Noise Scale", min: 2, max: 12, step: 0.5, defaultValue: 5 },
+      { key: "uIntensity", label: "Ember Glow", min: 0.5, max: 5, step: 0.25, defaultValue: 3 },
+    ],
     fragmentShader: `${uniformHeader}${noiseLib}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        float noise = snoise(vUv * 5.0) * 0.5 + 0.5;
+        float noise = snoise(vUv * uScale) * 0.5 + 0.5;
         float edge = smoothstep(t - 0.08, t, noise) - smoothstep(t, t + 0.02, noise);
         float reveal = step(noise, t);
-        vec3 ember = vec3(1.5, 0.5, 0.1) * edge * 3.0;
+        vec3 ember = vec3(1.5, 0.5, 0.1) * edge * uIntensity;
         vec4 colC = texture2D(uTexCurrent, vUv);
         vec4 colN = texture2D(uTexNext, vUv);
         vec4 result = mix(colC, colN, reveal);
@@ -207,35 +252,29 @@ export const shaderEffects: ShaderEffect[] = [
     id: "smoke",
     label: "Smoke",
     description: "Turbulent smoke billows and reveals the next image",
+    params: [
+      { key: "uIntensity", label: "Smoke Density", min: 0.04, max: 0.3, step: 0.02, defaultValue: 0.12 },
+      { key: "uScale", label: "Turbulence", min: 1, max: 8, step: 0.5, defaultValue: 3 },
+      { key: "uSpeed", label: "Speed", min: 1, max: 10, step: 0.5, defaultValue: 4 },
+    ],
     fragmentShader: `${uniformHeader}${fbmLib}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
-        
-        // Multi-layered turbulent smoke
         vec2 uv = vUv;
-        float time = t * 4.0;
-        
-        // Domain warping for realistic smoke turbulence
-        vec2 q = vec2(fbm(uv * 3.0 + vec2(0.0, time * 0.3)),
-                      fbm(uv * 3.0 + vec2(5.2, time * 0.4)));
-        vec2 r = vec2(fbm(uv * 3.0 + 4.0 * q + vec2(1.7, time * 0.2)),
-                      fbm(uv * 3.0 + 4.0 * q + vec2(8.3, time * 0.5)));
-        float f = fbm(uv * 3.0 + 2.0 * r);
-        
-        // Smoke distortion on UVs
-        float smokeIntensity = sin(t * 3.14159) * 0.12;
+        float time = t * uSpeed;
+        vec2 q = vec2(fbm(uv * uScale + vec2(0.0, time * 0.3)),
+                      fbm(uv * uScale + vec2(5.2, time * 0.4)));
+        vec2 r = vec2(fbm(uv * uScale + 4.0 * q + vec2(1.7, time * 0.2)),
+                      fbm(uv * uScale + 4.0 * q + vec2(8.3, time * 0.5)));
+        float f = fbm(uv * uScale + 2.0 * r);
+        float smokeIntensity = sin(t * 3.14159) * uIntensity;
         vec2 smokeOffset = vec2(q.x * r.y, q.y * r.x) * smokeIntensity;
         vec2 uvC = vUv + smokeOffset;
         vec2 uvN = vUv - smokeOffset * 0.6;
-        
-        // Smoke-shaped reveal mask
         float smokeMask = f * 0.6 + 0.2;
         float reveal = smoothstep(smokeMask - 0.15, smokeMask + 0.15, t * 1.3);
-        
-        // Wispy smoke edge glow
         float edge = smoothstep(t - 0.12, t - 0.02, smokeMask) - smoothstep(t + 0.02, t + 0.12, smokeMask);
         vec3 smokeColor = vec3(0.85, 0.85, 0.9) * edge * sin(t * 3.14159) * 1.5;
-        
         vec4 result = mix(texture2D(uTexCurrent, uvC), texture2D(uTexNext, uvN), reveal);
         result.rgb += smokeColor;
         gl_FragColor = result;
@@ -245,6 +284,11 @@ export const shaderEffects: ShaderEffect[] = [
     id: "liquid-portal",
     label: "Liquid Portal",
     description: "A swirling vortex portal warps space between images",
+    params: [
+      { key: "uIntensity", label: "Swirl Force", min: 1, max: 12, step: 0.5, defaultValue: 6 },
+      { key: "uScale", label: "Warp Detail", min: 2, max: 10, step: 0.5, defaultValue: 5 },
+      { key: "uSpeed", label: "Speed", min: 1, max: 8, step: 0.5, defaultValue: 3 },
+    ],
     fragmentShader: `${uniformHeader}${fbmLib}${noiseLib}
       void main() {
         float t = uProgress * uProgress * (3.0 - 2.0 * uProgress);
@@ -253,30 +297,19 @@ export const shaderEffects: ShaderEffect[] = [
         vec2 delta = uv - center;
         float dist = length(delta);
         float angle = atan(delta.y, delta.x);
-        
-        // Expanding portal radius
         float portalRadius = t * 1.2;
         float portalEdge = 0.08;
-        
-        // Swirling vortex rotation — increases near center
-        float swirl = sin(t * 3.14159) * 6.0 * (1.0 - dist);
+        float swirl = sin(t * 3.14159) * uIntensity * (1.0 - dist);
         float swirlAngle = angle + swirl * smoothstep(portalRadius + 0.2, 0.0, dist);
         vec2 swirlUv = center + vec2(cos(swirlAngle), sin(swirlAngle)) * dist;
-        
-        // Liquid distortion via FBM
-        float time = t * 3.0;
-        float n1 = fbm(swirlUv * 5.0 + time);
-        float n2 = fbm(swirlUv * 7.0 - time * 1.3 + 3.7);
+        float time = t * uSpeed;
+        float n1 = fbm(swirlUv * uScale + time);
+        float n2 = fbm(swirlUv * (uScale * 1.4) - time * 1.3 + 3.7);
         vec2 liquidWarp = vec2(n1 - 0.5, n2 - 0.5) * 0.08 * sin(t * 3.14159);
-        
         vec2 uvC = swirlUv + liquidWarp;
         vec2 uvN = swirlUv - liquidWarp * 0.5;
-        
-        // Portal mask — circular reveal with noisy edges
         float noisyEdge = snoise(vec2(angle * 3.0, dist * 8.0 + time)) * 0.06;
         float portalMask = smoothstep(portalRadius + portalEdge + noisyEdge, portalRadius - portalEdge + noisyEdge, dist);
-        
-        // Glowing ring at portal edge
         float ring = smoothstep(portalRadius - portalEdge * 3.0, portalRadius, dist)
                    * smoothstep(portalRadius + portalEdge * 3.0, portalRadius, dist);
         float ringPulse = ring * (1.0 + 0.5 * sin(angle * 8.0 + time * 5.0));
@@ -285,7 +318,6 @@ export const shaderEffects: ShaderEffect[] = [
           vec3(0.6, 0.2, 1.0),
           0.5 + 0.5 * sin(angle * 2.0 + time * 2.0)
         ) * ringPulse * 2.5 * sin(t * 3.14159);
-        
         vec4 colC = texture2D(uTexCurrent, uvC);
         vec4 colN = texture2D(uTexNext, uvN);
         vec4 result = mix(colC, colN, portalMask);
