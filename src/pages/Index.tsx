@@ -71,9 +71,11 @@ const Index = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
             {/* Active effect card */}
             <div className="flex flex-1 items-center gap-4 rounded-xl border border-border bg-secondary/40 px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background text-xs font-bold uppercase">
-                {active.label.slice(0, 2)}
-              </div>
+              {(() => { const Icon = effectIcons[active.id] || Waves; return (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+                  <Icon size={18} />
+                </div>
+              ); })()}
               <div>
                 <p className="text-sm font-semibold text-foreground">{active.label}</p>
                 <p className="text-xs text-muted-foreground">{active.description}</p>
