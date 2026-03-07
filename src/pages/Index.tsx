@@ -1,6 +1,17 @@
 import { useState } from "react";
+import { Waves, Grid3X3, ZoomIn, Columns3, Zap, Droplets, Flame, type LucideIcon } from "lucide-react";
 import ShaderCarousel from "@/components/ShaderCarousel";
 import { shaderEffects } from "@/shaders/index";
+
+const effectIcons: Record<string, LucideIcon> = {
+  "noise-distort": Waves,
+  "pixelation": Grid3X3,
+  "zoom-blur": ZoomIn,
+  "curtain-wipe": Columns3,
+  "glitch": Zap,
+  "liquid-morph": Droplets,
+  "burn-dissolve": Flame,
+};
 
 const Index = () => {
   const [activeEffect, setActiveEffect] = useState(shaderEffects[0].id);
