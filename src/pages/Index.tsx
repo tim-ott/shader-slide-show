@@ -48,25 +48,26 @@ const Index = () => {
             ))}
           </div>
 
-          {/* Active effect info */}
-          <div className="mt-6 rounded-xl bg-secondary p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Active Effect</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{active.label}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{active.description}</p>
-          </div>
-
-          {/* Keyboard hint */}
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-secondary px-1.5 font-mono text-[10px]">←</kbd>
-            <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-secondary px-1.5 font-mono text-[10px]">→</kbd>
-            <span>Navigate slides</span>
-          </div>
         </aside>
 
-        {/* Canvas */}
-        <main className="flex flex-1 items-center justify-center p-4 md:p-8">
+        {/* Canvas + info */}
+        <main className="flex flex-1 flex-col p-4 md:p-8">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border shadow-lg">
             <ShaderCarousel activeEffect={activeEffect} />
+          </div>
+
+          {/* Active effect info + keyboard hint */}
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <div className="rounded-xl bg-secondary p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Active Effect</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{active.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{active.description}</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-secondary p-4 text-xs text-muted-foreground">
+              <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1.5 font-mono text-[10px]">←</kbd>
+              <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-background px-1.5 font-mono text-[10px]">→</kbd>
+              <span>Navigate slides</span>
+            </div>
           </div>
         </main>
       </div>
