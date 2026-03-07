@@ -63,14 +63,28 @@ function TransitionPlane({ textures, currentIndex, nextIndex, progress, directio
   );
 }
 
+export type CarouselSnapshot = {
+  current: number;
+  next: number;
+  progress: number;
+  direction: number;
+  isTransitioning: boolean;
+};
+
 interface ShaderCanvasProps {
   activeEffect: string;
   customUniforms?: Record<string, number>;
   overrideShader?: string | null;
   duration?: number;
+  /** When true, freeze carousel (no auto-advance, no progress update) so theme transition layers stay in sync */
+  pause?: boolean;
+  /** When set, render only this frame (no animation/auto-advance). Used for overlay to match main. */
+  snapshot?: CarouselSnapshot | null;
+  /** Report state so parent can sync overlay */
+  onStateChange?: (state: CarouselSnapshot) => void;
 }
 
-export default function ShaderCarousel({ activeEffect, customUniforms = {}, overrideShader, duration = 1200 }: ShaderCanvasProps) {
+export default function ShaderCarousel({ activeEffect, customUniforms = {}, overrideShader, duration = 1200, pause = false, snapshot = null, onStateChange }: ShaderCanvasProps) {
   const [textures, setTextures] = useState<THREE.Texture[]>([]);
   const [current, setCurrent] = useState(0);
   const [next, setNext] = useState(0);
@@ -80,7 +94,16 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
   const animRef = useRef<number>(0);
   const autoRef = useRef<ReturnType<typeof setTimeout>>();
   const durationRef = useRef(duration);
+  const pauseRef = useRef(pause);
   durationRef.current = duration;
+  pauseRef.current = pause;
+
+  const isStatic = snapshot != null;
+  const displayCurrent = isStatic ? snapshot.current : current;
+  const displayNext = isStatic ? snapshot.next : next;
+  const displayProgress = isStatic ? snapshot.progress : progress;
+  const displayDirection = isStatic ? snapshot.direction : direction;
+  const displayTransitioning = isStatic ? snapshot.isTransitioning : isTransitioning;
 
   const effect = shaderEffects.find((e) => e.id === activeEffect) || shaderEffects[0];
   const fragmentShader = overrideShader || effect.fragmentShader;
@@ -90,14 +113,23 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
     Promise.all(slideSources.map((src) => loader.loadAsync(src))).then(setTextures);
   }, []);
 
+  useEffect(() => {
+    if (!onStateChange || isStatic) return;
+    onStateChange({ current, next, progress, direction, isTransitioning });
+  }, [onStateChange, isStatic, current, next, progress, direction, isTransitioning]);
+
   const goTo = useCallback(
     (idx: number, dir: number) => {
-      if (isTransitioning || textures.length === 0) return;
+      if (isStatic || isTransitioning || textures.length === 0 || pauseRef.current) return;
       setIsTransitioning(true);
       setNext(idx);
       setDirection(dir);
       const start = performance.now();
       const animate = (now: number) => {
+        if (pauseRef.current) {
+          animRef.current = requestAnimationFrame(animate);
+          return;
+        }
         const elapsed = now - start;
         const p = Math.min(elapsed / durationRef.current, 1);
         setProgress(p);
@@ -125,19 +157,21 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
 
   useEffect(() => {
     if (autoRef.current) clearTimeout(autoRef.current);
+    if (pause || isStatic) return;
     autoRef.current = setTimeout(goNext, 5000);
     return () => clearTimeout(autoRef.current);
-  }, [current, isTransitioning, goNext]);
+  }, [pause, isStatic, current, isTransitioning, goNext]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (pause || isStatic) return;
       if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goNext, goPrev]);
+  }, [pause, isStatic, goNext, goPrev]);
 
   if (textures.length === 0) {
     return (
@@ -147,7 +181,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
     );
   }
 
-  const displayIndex = isTransitioning ? next : current;
+  const displayIndex = displayTransitioning ? displayNext : displayCurrent;
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl bg-foreground/5">
@@ -158,10 +192,10 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
       >
         <TransitionPlane
           textures={textures}
-          currentIndex={current}
-          nextIndex={next}
-          progress={progress}
-          direction={direction}
+          currentIndex={displayCurrent}
+          nextIndex={displayNext}
+          progress={displayProgress}
+          direction={displayDirection}
           fragmentShader={fragmentShader}
           customUniforms={customUniforms}
         />
@@ -173,7 +207,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
         {slideSources.map((_, i) => (
           <button
             key={i}
-            onClick={() => goTo(i, i > current ? 1 : -1)}
+            onClick={() => !isStatic && goTo(i, i > displayCurrent ? 1 : -1)}
             className={`h-1.5 rounded-full transition-all duration-500 ${
               i === displayIndex
                 ? "w-6 bg-white"
@@ -184,7 +218,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
       </div>
 
       <button
-        onClick={goPrev}
+        onClick={() => !isStatic && goPrev()}
         className="absolute left-3 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-md transition hover:bg-white/20 hover:text-white"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -192,7 +226,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
         </svg>
       </button>
       <button
-        onClick={goNext}
+        onClick={() => !isStatic && goNext()}
         className="absolute right-3 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-md transition hover:bg-white/20 hover:text-white"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
