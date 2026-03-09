@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { vertexShader, shaderEffects } from "@/shaders/index";
+import { useCarouselTextures } from "@/contexts/CarouselTextureContext";
 import slide1 from "@/assets/slide-1.jpg";
 import slide2 from "@/assets/slide-2.jpg";
 import slide3 from "@/assets/slide-3.jpg";
@@ -82,10 +83,20 @@ interface ShaderCanvasProps {
   snapshot?: CarouselSnapshot | null;
   /** Report state so parent can sync overlay */
   onStateChange?: (state: CarouselSnapshot) => void;
+  /** Called with the canvas element when ready (for capturing carousel as image) */
+  onCanvasReady?: (canvas: HTMLCanvasElement) => void;
 }
 
-export default function ShaderCarousel({ activeEffect, customUniforms = {}, overrideShader, duration = 1200, pause = false, snapshot = null, onStateChange }: ShaderCanvasProps) {
-  const [textures, setTextures] = useState<THREE.Texture[]>([]);
+function CanvasReadyReporter({ onReady }: { onReady: (canvas: HTMLCanvasElement) => void }) {
+  const { gl } = useThree();
+  useEffect(() => {
+    onReady(gl.domElement);
+  }, [gl.domElement, onReady]);
+  return null;
+}
+
+export default function ShaderCarousel({ activeEffect, customUniforms = {}, overrideShader, duration = 1200, pause = false, snapshot = null, onStateChange, onCanvasReady }: ShaderCanvasProps) {
+  const textures = useCarouselTextures();
   const [current, setCurrent] = useState(0);
   const [next, setNext] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -109,18 +120,13 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
   const fragmentShader = overrideShader || effect.fragmentShader;
 
   useEffect(() => {
-    const loader = new THREE.TextureLoader();
-    Promise.all(slideSources.map((src) => loader.loadAsync(src))).then(setTextures);
-  }, []);
-
-  useEffect(() => {
     if (!onStateChange || isStatic) return;
     onStateChange({ current, next, progress, direction, isTransitioning });
   }, [onStateChange, isStatic, current, next, progress, direction, isTransitioning]);
 
   const goTo = useCallback(
     (idx: number, dir: number) => {
-      if (isStatic || isTransitioning || textures.length === 0 || pauseRef.current) return;
+      if (isStatic || isTransitioning || !textures || textures.length === 0 || pauseRef.current) return;
       setIsTransitioning(true);
       setNext(idx);
       setDirection(dir);
@@ -144,7 +150,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
       };
       animRef.current = requestAnimationFrame(animate);
     },
-    [isTransitioning, textures.length]
+    [isTransitioning, textures]
   );
 
   const goNext = useCallback(() => {
@@ -173,7 +179,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
     return () => window.removeEventListener("keydown", handler);
   }, [pause, isStatic, goNext, goPrev]);
 
-  if (textures.length === 0) {
+  if (!textures || textures.length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -190,6 +196,7 @@ export default function ShaderCarousel({ activeEffect, customUniforms = {}, over
         camera={{ position: [0, 0, 1], fov: 75 }}
         gl={{ antialias: false }}
       >
+        {onCanvasReady && <CanvasReadyReporter onReady={onCanvasReady} />}
         <TransitionPlane
           textures={textures}
           currentIndex={displayCurrent}
