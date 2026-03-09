@@ -10,8 +10,8 @@ interface ThemeTransitionOverlayProps {
   children: React.ReactNode;
 }
 
-const DURATION = 0.65;
-const EASE = [0.22, 1, 0.36, 1] as const;
+const DURATION = 0.6;
+const EASE = [0.7, 0, 0.3, 1] as const;
 
 export function ThemeTransitionOverlay({
   origin,
