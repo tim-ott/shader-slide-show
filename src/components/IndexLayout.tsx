@@ -46,6 +46,10 @@ export interface IndexLayoutProps {
   carouselSnapshot?: CarouselSnapshot | null;
   /** Main carousel reports state so we can freeze overlay to same frame */
   onCarouselStateChange?: (state: CarouselSnapshot) => void;
+  /** When set (e.g. overlay), render this instead of ShaderCarousel – image replica */
+  carouselOverride?: React.ReactNode;
+  /** Main carousel calls this when canvas is ready (for capture) */
+  onCanvasReady?: (canvas: HTMLCanvasElement) => void;
 }
 
 const sidebarTabs: { id: SidebarTab; label: string; icon: LucideIcon }[] = [
@@ -76,6 +80,8 @@ export function IndexLayout({
   pauseCarousel = false,
   carouselSnapshot = null,
   onCarouselStateChange,
+  carouselOverride,
+  onCanvasReady,
 }: IndexLayoutProps) {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
@@ -186,15 +192,18 @@ export function IndexLayout({
 
         <main className="flex min-w-0 flex-1 flex-col justify-center gap-4 overflow-hidden px-6 py-0">
           <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-2xl shadow-primary/5">
-            <ShaderCarousel
-              activeEffect={activeEffect}
-              customUniforms={uniformValues}
-              overrideShader={currentCode}
-              duration={duration}
-              pause={pauseCarousel}
-              snapshot={carouselSnapshot}
-              onStateChange={onCarouselStateChange}
-            />
+            {carouselOverride ?? (
+              <ShaderCarousel
+                activeEffect={activeEffect}
+                customUniforms={uniformValues}
+                overrideShader={currentCode}
+                duration={duration}
+                pause={pauseCarousel}
+                snapshot={carouselSnapshot}
+                onStateChange={onCarouselStateChange}
+                onCanvasReady={onCanvasReady}
+              />
+            )}
           </div>
 
           <div className="flex items-center gap-3">
